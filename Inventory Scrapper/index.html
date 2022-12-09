@@ -10,17 +10,42 @@
     <title>Cloud Inventory Scrapper</title>
 </head>
 <body>
+
+    <!-- https://aws.amazon.com/blogs/architecture/create-dynamic-contact-forms-for-s3-static-websites-using-aws-lambda-amazon-api-gateway-and-amazon-ses/ -->
+
     <div id="header">
         <h1 id="title">Inventory Web Scrapper</h1>
     </div>
-    <h2 id="message">Give us your email and we'll send you a notification when your product becomes availible!</h2>
-    <div id="input-field">
-        <h2 id="enter-url" class="enter-text">Enter a product URL:</h2>
-        <input id="input-url" class="input" placeholder="  enter product url...">
+
+    <h2 id="message">Give us a BestBuy URL and your email and we'll send you a notification when your product becomes availible!</h2>
+
+    <form 
+        id="input-field"
+        method="post"
+    >
+        <h2 id="enter-url" class="enter-text">Enter BestBuy URL:</h2>
+        <input
+            name="bestbuyLink"
+            type="url"
+            id="input-url" 
+            class="input" 
+            placeholder="  enter BestBuy url..."
+        >
         <h2 id="enter-email" class="enter-text">Enter your email:</h2>
-        <input id="input-email" class="input" placeholder="  enter your email...">
-        <button id="submit-btn">Submit</button>
-    </div>
-    <footer>Created by Ariel Tejada, William Mak, Adrian Mok and Min Pan</footer>
+        <input
+            name="yourEmail"
+            type="email"
+            id="input-email" 
+            class="input" 
+            placeholder="  enter your email..."
+        >
+        <button 
+            id="submit-btn" 
+            type="button" 
+            onClick="submitToAPI(event)"
+        >Submit</button>
+    </form>
+
+    <footer>Ariel Tejada, William Mak, Adrian Mok and Min Pan</footer>
 </body>
 </html>
