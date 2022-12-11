@@ -24,7 +24,7 @@
         method="post"
         action="https://938sdqlpdc.execute-api.us-east-2.amazonaws.com/sumbitAPIpost"
     >
-        <h2 id="enter-url" class="enter-text">Enter BestBuy URL:</h2>
+        <label for="bestbuyURL" id="enter-url" class="enter-text">Enter BestBuy URL:</label>
         <input
             name="bestbuyURL"
             type="url"
@@ -32,7 +32,7 @@
             class="input" 
             placeholder="  enter BestBuy url..."
         >
-        <h2 id="enter-email" class="enter-text">Enter your email:</h2>
+        <label for="email" id="enter-email" class="enter-text">Enter your email:</label>
         <input
             name="email"
             type="email"
@@ -40,10 +40,7 @@
             class="input" 
             placeholder="  enter your email..."
         >
-        <button 
-            id="submit-btn" 
-            type="submit"
-        >Submit</button>
+        <input id="submit-btn" type="submit" value="Submit">
     </form>
 
     <footer>Ariel Tejada, William Mak, Adrian Mok and Min Pan</footer>
