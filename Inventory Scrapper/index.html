@@ -22,10 +22,11 @@
     <form 
         id="input-field"
         method="post"
+        action="https://938sdqlpdc.execute-api.us-east-2.amazonaws.com/sumbitAPIpost"
     >
         <h2 id="enter-url" class="enter-text">Enter BestBuy URL:</h2>
         <input
-            name="bestbuyLink"
+            name="bestbuyURL"
             type="url"
             id="input-url" 
             class="input" 
@@ -33,7 +34,7 @@
         >
         <h2 id="enter-email" class="enter-text">Enter your email:</h2>
         <input
-            name="yourEmail"
+            name="email"
             type="email"
             id="input-email" 
             class="input" 
@@ -41,8 +42,7 @@
         >
         <button 
             id="submit-btn" 
-            type="button" 
-            onClick="submitToAPI(event)"
+            type="submit"
         >Submit</button>
     </form>
 
