@@ -2,7 +2,9 @@ import boto3
 from boto3.dynamodb.conditions import Key, Attr
 
 
-dynamodb = boto3.resource('dynamodb')
+dynamodb = boto3.resource('dynamodb',
+                          region_name='us-east-1',
+                          endpoint_url='https://dynamodb.us-east-1.amazonaws.com')
 table = dynamodb.Table('Scraper')
 
 def add_item(url,email):
@@ -21,7 +23,7 @@ def delete_item(url,email):
         }
     )
 
-#this will query specific entries 
+#this will query specific entries
 def query_table(url):
     response = table.query(
         KeyConditionExpression=Key('URL').eq(url) #eq is equal to the key value
