@@ -5,12 +5,19 @@
     font-family: 'Courier New', Courier, monospace;
 }
 
+html {
+    background-color: "#B3E0FF";
+}
+
 body {
     background-image: url('./images/shopping3.jpg');
     background-repeat: no-repeat;
     background-size: cover;
     background-position: center;
     font-family: 'Courier New', Courier, monospace;
+    background-color: "#B3E0FF";
+    width: 100vw;
+    height: 100vh;
 }
 
 #header{
@@ -39,6 +46,7 @@ body {
 
 .enter-text{
     text-align: center;
+    font-weight: bold;
 }
 
 #submit-btn{
