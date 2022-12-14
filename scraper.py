@@ -15,12 +15,14 @@ def main():
     load_dotenv()
 
     urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
     sns_client = boto3.client(
-        'sns',
-        aws_access_key_id=os.getenv("AWSAccessKeyId"),
-        aws_secret_access_key=os.getenv("AWSSecretKey"),
-        region_name = 'us-east-1'
+      'sns',
+      aws_access_key_id=os.getenv("AWSAccessKeyId"),
+      aws_secret_access_key=os.getenv("AWSSecretKey"),
+      region_name = 'us-east-1'
     )
+
 
     sns = boto3.resource('sns', region_name = 'us-east-1',
         aws_access_key_id=os.getenv("AWSAccessKeyId"),
@@ -36,51 +38,27 @@ def main():
 
     table = dynamodb.Table('Scraper')
 
-    items = consolidate(scan_table(table))#items is a list of dictionaries that has ['URL'] = string url, ['Emails'] = list of emails
+    items = scan_table(table)#items is a list of dictionaries that has ['URL'] = string url, ['Emails'] = list of emails
 
-    arn_name = len(list_topics(sns_client))
+    def updateData(items):
+        while(True):
+            items.clear()
+            dynamodb = boto3.resource('dynamodb',
+                region_name='us-east-1',
+                endpoint_url='https://dynamodb.us-east-1.amazonaws.com',
+                aws_access_key_id=os.getenv("AWSAccessKeyId"),
+                aws_secret_access_key=os.getenv("AWSSecretKey"),
+            )
 
-    for item in items:
-        if len(item) == 2:
-            arn = create_topic("bingbong" + str(arn_name), sns_client)
-            arn_name +=1
-            if arn:
-                item['arn'] = arn
-                subscribe(item['arn']['TopicArn'], item['Emails'], sns_client)
+            table = dynamodb.Table('Scraper')
 
-    # def updateData(items):
-    #     while(True):
-    #         items.clear()
-    #         dynamodb = boto3.resource('dynamodb',
-    #             region_name='us-east-1',
-    #             endpoint_url='https://dynamodb.us-east-1.amazonaws.com',
-    #             aws_access_key_id=os.getenv("AWSAccessKeyId"),
-    #             aws_secret_access_key=os.getenv("AWSSecretKey"),
-    #         )
+            items += scan_table(table)
 
-    #         table = dynamodb.Table('Scraper')
+            time.sleep(3600)
 
-    #         temp = consolidate(scan_table(table) + items)#items is a list of dictionaries that has ['URL'] = string url, ['Emails'] = list of emails
+    x = threading.Thread(target=updateData, args=(items,))
+    x.start()
 
-    #         arn_name = len(list_topics(sns_client))
-
-    #         for item in temp:
-    #             if len(item) == 2:
-    #                 arn = create_topic("bingbong" + str(arn_name), sns_client)
-    #                 arn_name +=1
-    #                 if arn:
-    #                     item['arn'] = arn
-    #                     subscribe(item['arn']['TopicArn'], item['Emails'], sns_client)
-    #         items+=temp
-    #         time.sleep(3600)
-
-
-    # # print(items)
-
-    # x = threading.Thread(target=updateData, args=(items,))
-    # x.start()
-
-    # attempt = 0
     item_details = None
     counter = 0
     while(True):
@@ -94,55 +72,21 @@ def main():
                 counter+=1
                 
             else:
-                publish(item_details, sns_client, items[counter]['arn']['TopicArn'])
-                delete_topic(sns, items[counter]['arn']['TopicArn'])
+                publish(item_details, sns_client, items[counter]['Arn'])
+                time.sleep(2)
+                delete_topic(sns, items[counter]['Arn'])
                 delete_item(items[counter], table)
                 items.pop(counter)
                 counter = 0
 
-
-
 def delete_item(item,table):
-    for i in range(len(item['Emails'])):
-        table.delete_item(
-            Key={
-                'URL': item['URL'],
-                'Email': item['Emails'][i]
-            }
-        )
-
-def consolidate(items):
-    d = defaultdict(list)
-    for item in items:
-        d[item['URL']].append(item['Email'])
-
-    res = []
-
-    for key in d.keys():
-        res.append({'URL' : key, 'Emails' : d[key]})
-
-    return res
-
-def list_topics(sns_client):
-    """
-    Lists all SNS notification topics using paginator.
-    """
-    try:
-
-        paginator = sns_client.get_paginator('list_topics')
-
-        # creating a PageIterator from the paginator
-        page_iterator = paginator.paginate().build_full_result()
-
-        topics_list = []
-
-        # loop through each page from page_iterator
-        for page in page_iterator['Topics']:
-            topics_list.append(page['TopicArn'])
-    except ClientError:
-        print(f'Could not list SNS topics.')
-    else:
-        return topics_list
+    table.delete_item(
+        Key={
+            'URL': item['URL'],
+            'Email': item['Email'],
+            # 'Arn' : item['Arn']
+        }
+    )
 
 def delete_topic(sns, arn):
     """
@@ -156,39 +100,6 @@ def delete_topic(sns, arn):
     except ClientError:
         print("Couldn't delete topic %s.", topic.arn)
 
-
-
-def create_topic(name, sns_client):
-    """
-    Creates a SNS notification topic.
-    """
-    try:
-        topic = sns_client.create_topic(Name=name)
-
-    except ClientError:
-        print(f'Could not create SNS topic {name}.')
-    else:
-        return topic
-
-def subscribe(topic, endpoints, sns_client):
-    """
-    Subscribe to a topic using endpoint as email OR SMS
-    """
-    for endpoint in endpoints:
-        try:
-            subscription = sns_client.subscribe(
-                TopicArn=topic,
-                Protocol="email",
-                Endpoint=endpoint,
-                ReturnSubscriptionArn=True)['SubscriptionArn']
-        except ClientError:
-            print(
-                "Couldn't subscribe {protocol} {endpoint} to topic {topic}.")
-        else:
-            return subscription
-
-
-
 #this will scan the entire database and print the contents
 def scan_table(table):
     response = table.scan()
@@ -196,8 +107,11 @@ def scan_table(table):
     return items
 
 def publish(details, sns_client, arn):
-    response = sns_client.publish(TopicArn = arn, Message=details)
-    print(response)
+    try:
+        response = sns_client.publish(TopicArn = arn, Message=details)
+        print(response)
+    except:
+        print("Could not publish")
 
 def get_item_details(URL):
     #if button does not say in stock, return None
@@ -228,8 +142,6 @@ def get_item_details(URL):
     if not price:
         return
 
-    # print(price.text.split('.')[0])
-    
     return URL + " " + price.text.split('.')[0]
 
 
